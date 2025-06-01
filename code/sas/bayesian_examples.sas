@@ -49,61 +49,73 @@ proc mcmc data=proportion_data nbi=1000 nmc=10000 seed=123
           plots=all outpost=posterior1;
     parms p 0.5;
     prior p ~ beta(1, 1);  /* Uniform prior */
-    likelihood successes ~ binomial(trials, p);
+    model successes ~ binomial(trials, p);
     title3 "Uniform (non-informative) prior: Beta(1, 1)";
 run;
 
 /* Calculate posterior statistics for uniform prior */
-proc means data=posterior1 mean std p2_5 p97_5;
-    var p;
-    title3 "Posterior Statistics - Uniform Prior";
-run;
+proc univariate data=posterior1 noprint;
+var p;
+output out=UniWidePctls pctlpre=P_ pctlpts=2.5, 97.5; 
+run; 
+ 
+proc print data=UniWidePctls noobs; run;
 
 /* Prior 2: Weakly informative Beta(2,2) */
 proc mcmc data=proportion_data nbi=1000 nmc=10000 seed=123 
           plots=all outpost=posterior2;
     parms p 0.5;
     prior p ~ beta(2, 2);  /* Weakly informative prior */
-    likelihood successes ~ binomial(trials, p);
+    model successes ~ binomial(trials, p);
     title3 "Weakly informative prior: Beta(2, 2)";
 run;
 
-proc means data=posterior2 mean std p2_5 p97_5;
-    var p;
-    title3 "Posterior Statistics - Weakly Informative Prior";
-run;
+proc univariate data=posterior2 noprint;
+var p;
+output out=UniWidePctls2 pctlpre=P_ pctlpts=2.5, 97.5; 
+run; 
+ 
+proc print data=UniWidePctls2 noobs; run;
+
 
 /* Prior 3: Optimistic Beta(3,1) */
 proc mcmc data=proportion_data nbi=1000 nmc=10000 seed=123 
           plots=all outpost=posterior3;
     parms p 0.5;
     prior p ~ beta(3, 1);  /* Optimistic prior */
-    likelihood successes ~ binomial(trials, p);
+    model successes ~ binomial(trials, p);
     title3 "Optimistic prior: Beta(3, 1)";
 run;
 
-proc means data=posterior3 mean std p2_5 p97_5;
-    var p;
-    title3 "Posterior Statistics - Optimistic Prior";
-run;
+proc univariate data=posterior3 noprint;
+var p;
+output out=UniWidePctls3 pctlpre=P_ pctlpts=2.5, 97.5; 
+run; 
+ 
+proc print data=UniWidePctls3 noobs; run;
+
 
 /* Prior 4: Pessimistic Beta(1,3) */
 proc mcmc data=proportion_data nbi=1000 nmc=10000 seed=123 
           plots=all outpost=posterior4;
     parms p 0.5;
     prior p ~ beta(1, 3);  /* Pessimistic prior */
-    likelihood successes ~ binomial(trials, p);
+    model successes ~ binomial(trials, p);
     title3 "Pessimistic prior: Beta(1, 3)";
 run;
 
-proc means data=posterior4 mean std p2_5 p97_5;
-    var p;
-    title3 "Posterior Statistics - Pessimistic Prior";
-run;
+proc univariate data=posterior4 noprint;
+var p;
+output out=UniWidePctls4 pctlpre=P_ pctlpts=2.5, 97.5; 
+run; 
+ 
+proc print data=UniWidePctls4 noobs; run;
+
 
 /* Example 2: Bayesian A/B Testing */
 title "Bayesian A/B Testing Example (SAS Version)";
 
+/* Simulate A/B test data */
 /* Simulate A/B test data */
 data ab_test_data;
     call streaminit(42);
@@ -127,6 +139,9 @@ data ab_test_data;
     z_stat = (p_b - p_a) / se_diff;
     p_value = 2 * (1 - probnorm(abs(z_stat)));
     
+    /* Calculate difference for output */
+    diff = p_b - p_a;
+    
     put "=== Bayesian A/B Testing Example ===";
     put "Group A (Control): " conversions_a "conversions out of " n_a "visitors";
     put "Group B (Treatment): " conversions_b "conversions out of " n_b "visitors";
@@ -134,7 +149,7 @@ data ab_test_data;
     put "FREQUENTIST APPROACH:";
     put "Conversion rate A: " p_a 6.3;
     put "Conversion rate B: " p_b 6.3;
-    put "Difference: " (p_b - p_a) 6.3;
+    put "Difference: " diff 6.3;
     put "Z-statistic: " z_stat 6.3;
     put "P-value: " p_value 6.3;
     if p_value < 0.05 then put "Significant at α=0.05: Yes";
@@ -144,26 +159,34 @@ data ab_test_data;
     output;
 run;
 
+
 /* Bayesian approach using PROC MCMC */
 title2 "BAYESIAN APPROACH:";
 
 proc mcmc data=ab_test_data nbi=2000 nmc=20000 seed=123 
           plots=all outpost=ab_posterior;
-    parms p_a 0.1 p_b 0.1;
-    prior p_a ~ beta(1, 1);  /* Uniform priors */
-    prior p_b ~ beta(1, 1);
-    likelihood conversions_a ~ binomial(n_a, p_a);
-    likelihood conversions_b ~ binomial(n_b, p_b);
-    
-    /* Calculate derived quantities */
-    difference = p_b - p_a;
-    prob_b_better = (p_b > p_a);
-    meaningful_improvement = (difference > 0.01);
+    parms theta_a 0.1 theta_b 0.1;
+    prior theta_a ~ beta(1, 1);  /* Uniform priors */
+    prior theta_b ~ beta(1, 1);
+    model conversions_a ~ binomial(n_a, theta_a);
+    model conversions_b ~ binomial(n_b, theta_b);
 run;
 
+/* Calculate derived quantities from the posterior samples */ 
+data ab_posterior; set ab_posterior; 
+/* Calculate derived quantities */ 
+difference = theta_b - theta_a; 
+prob_b_better = (theta_b > theta_a); 
+meaningful_improvement = (difference > 0.01); 
+run; 
+
 /* Calculate Bayesian statistics */
-proc means data=ab_posterior mean std p2_5 p97_5;
-    var p_a p_b difference;
+proc univariate data=ab_posterior noprint;
+var theta_a theta_b difference;
+output out=UniWidePctls5 pctlpre=P_ pctlpts=2.5, 97.5; 
+run; 
+ 
+proc print data=UniWidePctls5 noobs; 
     title3 "Posterior Statistics";
 run;
 
@@ -230,7 +253,7 @@ proc mcmc data=regression_data nbi=2000 nmc=20000 seed=123
     
     /* Likelihood */
     mu = intercept + slope * x;
-    likelihood y ~ normal(mu, var=sigma*sigma);
+    model y ~ normal(mu, var=sigma*sigma);
     
     /* Derived quantities for probability statements */
     slope_positive = (slope > 0);
@@ -238,8 +261,12 @@ proc mcmc data=regression_data nbi=2000 nmc=20000 seed=123
 run;
 
 /* Posterior statistics */
-proc means data=reg_posterior mean std p2_5 p97_5;
-    var intercept slope sigma;
+proc univariate data=reg_posterior noprint;
+var intercept slope sigma;
+output out=UniWidePctls6 pctlpre=P_ pctlpts=2.5, 97.5; 
+run; 
+ 
+proc print data=UniWidePctls6 noobs; 
     title3 "Posterior Statistics";
 run;
 
@@ -260,8 +287,12 @@ proc genmod data=regression_data;
 run;
 
 /* Compare results */
-proc means data=genmod_posterior mean std p2_5 p97_5;
-    var intercept x;
+proc univariate data=genmod_posterior noprint;
+var intercept x;
+output out=UniWidePctls7 pctlpre=P_ pctlpts=2.5, 97.5; 
+run; 
+ 
+proc print data=UniWidePctls7 noobs; 
     title3 "PROC GENMOD Posterior Statistics";
 run;
 
@@ -306,7 +337,7 @@ run;
 /* Summary comparison table */
 title "Summary of All Examples";
 
-proc print data=_null_;
+data _null_;
     put "=== Summary ===";
     put "These SAS examples demonstrate key differences between Bayesian and frequentist approaches:";
     put "1. Bayesian methods provide probability statements about parameters";
@@ -322,12 +353,13 @@ proc print data=_null_;
     put "- PROC LOGISTIC with BAYES statement: Bayesian logistic regression";
 run;
 
+
 /* Macro for easy replication with different datasets */
 %macro bayesian_proportion(data=, success_var=, trial_var=, alpha_prior=1, beta_prior=1);
     proc mcmc data=&data nbi=1000 nmc=10000 seed=123 plots=all;
         parms p 0.5;
         prior p ~ beta(&alpha_prior, &beta_prior);
-        likelihood &success_var ~ binomial(&trial_var, p);
+        model &success_var ~ binomial(&trial_var, p);
         title "Bayesian Proportion Analysis - Beta(&alpha_prior, &beta_prior) Prior";
     run;
 %mend;
@@ -338,8 +370,8 @@ run;
         parms p_a 0.1 p_b 0.1;
         prior p_a ~ beta(1, 1);
         prior p_b ~ beta(1, 1);
-        likelihood &conv_a ~ binomial(&n_a, p_a);
-        likelihood &conv_b ~ binomial(&n_b, p_b);
+        model &conv_a ~ binomial(&n_a, p_a);
+        model &conv_b ~ binomial(&n_b, p_b);
         
         difference = p_b - p_a;
         prob_b_better = (p_b > p_a);
@@ -358,7 +390,7 @@ run;
         prior sigma ~ igamma(0.1, scale=0.1);
         
         mu = intercept + slope * &x_var;
-        likelihood &y_var ~ normal(mu, var=sigma*sigma);
+        model &y_var ~ normal(mu, var=sigma*sigma);
         title "Bayesian Linear Regression Analysis";
     run;
 %mend;
