@@ -1,6 +1,5 @@
 # A Frequentist's Guide to Bayesian Statistics: An Accessible Primer
 
-*By Manus AI*
 
 ## 1. Introduction: Why Bayesian Statistics Isn't as Scary as You Think
 
