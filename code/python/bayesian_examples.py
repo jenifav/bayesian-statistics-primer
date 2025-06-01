@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 from scipy.optimize import minimize
 import seaborn as sns
+import os
 
 # Set style for better plots
 plt.style.use('seaborn-v0_8')
@@ -93,7 +94,7 @@ def bayesian_proportion_example():
         axes[i].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('/home/ubuntu/bayesian_proportion_example.png', dpi=300, bbox_inches='tight')
+    plt.savefig('bayesian_proportion_example.png', dpi=300, bbox_inches='tight')
     plt.show()
     
     return fig
@@ -240,7 +241,7 @@ def bayesian_ab_test():
     axes[2].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('/home/ubuntu/bayesian_ab_test.png', dpi=300, bbox_inches='tight')
+    plt.savefig('bayesian_ab_test.png', dpi=300, bbox_inches='tight')
     plt.show()
     
     return fig
@@ -388,7 +389,7 @@ def bayesian_linear_regression():
     axes[1,1].grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('/home/ubuntu/bayesian_regression.png', dpi=300, bbox_inches='tight')
+    plt.savefig('bayesian_regression.png', dpi=300, bbox_inches='tight')
     plt.show()
     
     return fig
