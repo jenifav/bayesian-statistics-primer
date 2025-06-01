@@ -318,7 +318,6 @@ bayesian_linear_regression_r <- function() {
   bayes_model <- stan_glm(y ~ x, data = data, 
                          prior_intercept = normal(0, 10),
                          prior = normal(0, 10),
-                         prior_aux = exponential(1),
                          chains = 4, iter = 2000, 
                          refresh = 0)  # suppress output
   
